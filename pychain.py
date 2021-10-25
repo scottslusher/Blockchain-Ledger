@@ -23,6 +23,7 @@
 
 ################################################################################
 # Imports
+from ctypes import _SimpleCData
 import streamlit as st
 from dataclasses import dataclass
 from typing import Any, List
@@ -75,7 +76,7 @@ class Block:
     record: Record
 
     creator_id: int
-    prev_hash: str = 0
+    prev_hash: str = "0"
     timestamp: str = datetime.datetime.utcnow().strftime("%H:%M:%S")
     nonce: str = 0
 
@@ -117,7 +118,7 @@ class PyChain:
 
             calculated_hash = block.hash_block()
 
-        print("Wining Hash", calculated_hash)
+        print("Winning Hash", calculated_hash)
         return block
 
     def add_block(self, candidate_block):
@@ -146,7 +147,13 @@ class PyChain:
 @st.cache(allow_output_mutation=True)
 def setup():
     print("Initializing Chain")
-    return PyChain([Block("Genesis", 0)])
+    genesis_block = Block(
+        record=Record(sender="22", receiver="33", amount=100),
+        creator_id=42
+    )
+
+
+    return PyChain([genesis_block])
 
 
 st.markdown("# PyChain")
@@ -170,19 +177,19 @@ pychain = setup()
 
 # @TODO:
 # Delete the `input_data` variable from the Streamlit interface.
-input_data = st.text_input("Block Data")
+# input_data = st.text_input("Block Data")
 
 # @TODO:
 # Add an input area where you can get a value for `sender` from the user.
-sender = st.text_input("Sender Information")
+sender_input = st.text_input("Sender ID")
 
 # @TODO:
 # Add an input area where you can get a value for `receiver` from the user.
-receiver = st.text_input("Receiver Information")
+receiver_input = st.text_input("Receiver ID")
 
 # @TODO:
 # Add an input area where you can get a value for `amount` from the user.
-amount = st.text_input("How much would you like to send?")
+amount_input = st.text_input("How much would you like to send?")
 
 if st.button("Add Block"):
     prev_block = pychain.chain[-1]
@@ -193,7 +200,7 @@ if st.button("Add Block"):
     # which is set equal to a `Record` that contains the `sender`, `receiver`,
     # and `amount` values
     new_block = Block(
-        record=Record,
+        record=Record(sender=sender_input, receiver=receiver_input, amount=float(amount_input)),
         creator_id=42,
         prev_hash=prev_block_hash
     )
@@ -206,7 +213,8 @@ if st.button("Add Block"):
 
 st.markdown("## The PyChain Ledger")
 
-pychain_df = pd.DataFrame(pychain.chain)
+pychain_df = pd.DataFrame(pychain.chain).astype(str)
+
 st.write(pychain_df)
 
 difficulty = st.sidebar.slider("Block Difficulty", 1, 5, 2)
